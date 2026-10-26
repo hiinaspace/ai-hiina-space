@@ -1,0 +1,44 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+
+      - id: ruff-lint
+        name: ruff lint
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+
+      - id: ty
+        name: ty typecheck
+        entry: uv run ty check tools tests
+        language: system
+        pass_filenames: false
+        types: [python]
+
+      - id: pytest
+        name: pytest
+        entry: uv run pytest -q
+        language: system
+        pass_filenames: false
+        types: [python]
+
+      # Fail closed: builds the site, then lints content, the built output and
+      # the commit identity. Denylist lives outside this repo (see README).
+      - id: publish-lint
+        name: publish-lint
+        entry: uv run tools/build.py --lint
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: gitleaks
+        name: gitleaks
+        entry: gitleaks git --staged --redact --no-banner
+        language: system
+        pass_filenames: false
+        always_run: true

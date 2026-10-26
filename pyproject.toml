@@ -1,0 +1,28 @@
+[project]
+name = "ai-hiina-space"
+version = "0.1.0"
+description = "Build and lint tooling for ai.hiina.space, an agent-first Markdown corpus"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "Hiina", email = "hiina@hiina.space" }]
+dependencies = ["pyyaml>=6"]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "ruff>=0.9", "ty>=0.0.1a1"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 96
+src = ["tools", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tools"]
+
+[tool.ty.environment]
+extra-paths = ["tools"]

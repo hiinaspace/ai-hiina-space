@@ -1,0 +1,6 @@
+dist/
+.venv/
+__pycache__/
+.wrangler/
+node_modules/
+lint/denylist.txt
