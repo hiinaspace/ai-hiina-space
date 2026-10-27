@@ -12,8 +12,13 @@ private original, for the reviewer):
   4. on pass, commit as Hiina and move the draft to <queue>/done/; otherwise
      restore the repo and move the draft to <queue>/held/ with the review.
 
+A draft whose id and version are already published (its frozen version file is
+committed) is moved to done/ without a review: a rerun after a failed vault
+write must not re-review or hold it. An `<slug>.original.md` left behind after
+its draft went to done/ or held/ follows it there.
+
 Pushing the commit and deploying are left to the caller (the CI workflow).
-Prints a JSON summary: {"published": [...], "held": [{"slug", "reason"}]}.
+Prints a JSON summary: {"published": [...], "skipped": [...], "held": [{"slug", "reason"}]}.
 The reviewer's model is checked from `modelUsage` in the CLI's JSON output, not
 from its self-report; a substitution fails the draft.
 """
@@ -80,6 +85,10 @@ class Review:
 
 
 class Hold(Exception):
+    pass
+
+
+class AlreadyPublished(Exception):
     pass
 
 
@@ -165,9 +174,11 @@ def process(
     meta, _ = build.split_frontmatter(public)
     if meta.get("id") != slug:
         raise Hold(f"frontmatter id {meta.get('id')!r} does not match file name {slug!r}")
+    frozen = f"versions/reports/{slug}/v{meta['version']}.md"
+    if run(["git", "ls-files", "--error-unmatch", frozen]).returncode == 0:
+        raise AlreadyPublished(f"{slug} v{meta['version']} is already published")
     target = ROOT / "content" / "reports" / f"{slug}.md"
     target.write_text(public, encoding="utf-8")
-    frozen = f"versions/reports/{slug}/v{meta['version']}.md"
 
     if failure := lint(frozen):
         raise Hold(f"lint failed:\n{failure}")
@@ -222,7 +233,7 @@ def main(argv: list[str] | None = None) -> int:
         for p in args.queue.glob("*.md")
         if not p.name.endswith((".original.md", ".review.md")) and p.name != "README.md"
     )
-    summary: dict[str, list] = {"published": [], "held": []}
+    summary: dict[str, list] = {"published": [], "skipped": [], "held": []}
     for draft in drafts:
         slug = draft.stem
         try:
@@ -230,10 +241,19 @@ def main(argv: list[str] | None = None) -> int:
             assert rev is not None
             move(args.queue, slug, "done", rev.raw)
             summary["published"].append(slug)
+        except AlreadyPublished as e:
+            move(args.queue, slug, "done", f"# Skipped: {slug}\n\n{e}; not reviewed again.\n")
+            summary["skipped"].append(slug)
         except Hold as e:
             restore()
             move(args.queue, slug, "held", f"# Held: {slug}\n\n{e}\n")
             summary["held"].append({"slug": slug, "reason": str(e)[:500]})
+    for orphan in args.queue.glob("*.original.md"):
+        slug = orphan.name.removesuffix(".original.md")
+        for dest in ("done", "held"):
+            if (args.queue / dest / f"{slug}.md").exists():
+                shutil.move(orphan, args.queue / dest / orphan.name)
+                break
     if summary["published"] or summary["held"]:
         build.build()  # leave dist/ matching the committed state for the deploy step
     print(json.dumps(summary, indent=2))
