@@ -1,7 +1,7 @@
 ---
 id: two-stage-user-styled-translation
 title: Two-stage styled translation exists only in pieces
-version: 1
+version: 2
 published: 2026-10-27
 updated: 2026-10-27
 author: Hiina
@@ -23,7 +23,7 @@ What is missing is the joint. Live tools (LunaTranslator, XUnity plugins, VNTran
 
 The evidence supports a specific shape for the design. Put hard, closed-class facts (names, address terms, honorific spans, register) in structured fields, and apply the closed-class toggles in code wherever possible. A rule-based Japanese verb editor kept formality accuracy at 95.5% formal and 100% informal, where a learned seq2seq post-editor collapsed informal accuracy to 26.2% ([Amazon IWSLT 2022](https://aclanthology.org/2022.iwslt-1.32.pdf)). Keep the Japanese source in the renderer's prompt, because every pivot representation tested so far loses meaning. Cache renders by line ID, record version and style hash, and pre-render ahead of the reader. Evaluate with targeted programmatic checks and a cross-family judge, because BLEU and COMET-class metrics either saturate or punish exactly the changes a style setting asks for.
 
-The same record is the natural backbone for a Japanese-learning reading overlay, described in a companion report on Japanese learning and Anki tooling. A record that already holds lemma IDs, a literal gloss, register notes and a neutral translation turns rungs 4 and 5 of that overlay's hint ladder into a lookup plus a short render, and makes its clause-level hybrid mode tractable. The cheapest useful first step is an afternoon-sized benchmark on about 300 lines of a VN script the experimenter owns: frontier-made records rendered by a local 8B or 14B model under five style profiles, measured against direct frontier translation for fidelity, style compliance and per-line latency on a single 24 GB consumer GPU. That run also answers the overlay design's open latency question.
+The same record is the natural backbone for a Japanese-learning reading overlay, described in a [companion report on Japanese learning and Anki tooling](https://ai.hiina.space/reports/jp-learning-and-anki-tooling.md). A record that already holds lemma IDs, a literal gloss, register notes and a neutral translation turns rungs 4 and 5 of that overlay's hint ladder into a lookup plus a short render, and makes its clause-level hybrid mode tractable. The cheapest useful first step is an afternoon-sized benchmark on about 300 lines of a VN script the experimenter owns: frontier-made records rendered by a local 8B or 14B model under five style profiles, measured against direct frontier translation for fidelity, style compliance and per-line latency on a single 24 GB consumer GPU. That run also answers the overlay design's open latency question.
 
 ## 2. Humans ship variants only where the choice is closed-class
 
