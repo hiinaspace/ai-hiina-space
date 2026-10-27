@@ -196,6 +196,11 @@ def report_header(rep: Source, full_bytes: int | None) -> str:
         f"updated {fmt(m['updated'])} · status: {m['status']}",
         f"- Canonical: {rep.md_url} (this version as one file: "
         f"{BASE}/{rep.path}/v{m['version']}.md)",
+    ]
+    if older := older_versions(rep):
+        links = ", ".join(f"[v{v}]({BASE}/{rep.path}/v{v}.md)" for v in older)
+        lines.append(f"- Earlier versions: {links}")
+    lines += [
         f"- Takeaway: {m['takeaway']}",
         f"- Topics: {', '.join(topic_link(t) for t in m['topics'])}",
     ]
@@ -469,6 +474,15 @@ def frozen_version(rep: Source, full: str) -> str:
     return text
 
 
+def older_versions(rep: Source) -> list[int]:
+    """Frozen version numbers below the current one, oldest first."""
+    current = int(rep.meta["version"])
+    found = (
+        int(p.stem[1:]) for p in (VERSIONS / rep.path).glob("v*.md") if p.stem[1:].isdigit()
+    )
+    return sorted(v for v in found if v < current)
+
+
 class Site:
     def __init__(self) -> None:
         self.md_files: list[str] = []
@@ -506,6 +520,13 @@ def build() -> list[Source]:
             src.title,
             html_too=False,
         )
+        for v in older_versions(src):  # superseded versions stay served, unchanged
+            site.page(
+                f"{src.path}/v{v}",
+                (VERSIONS / src.path / f"v{v}.md").read_text(encoding="utf-8"),
+                src.title,
+                html_too=False,
+            )
         lede, sections = split_sections(strip_leading_h1(src.body))
         if full_bytes <= SPLIT_BYTES or len(sections) < 2:
             site.page(src.path, full, src.title)
