@@ -1,7 +1,7 @@
 ---
 id: jp-learning-and-anki-tooling
 title: "Project status: Japanese immersion learning with Anki and selective glossing"
-version: 1
+version: 2
 published: 2026-10-27
 updated: 2026-10-27
 author: Hiina
@@ -31,7 +31,7 @@ This page is a status record of Hiina's Japanese-learning project, written for a
 
 The goal is to enjoy Japanese anime, games, visual novels and articles while learning from them. Anki supports that goal and is not the goal. The project's question is therefore not "how to get the most Anki retention per minute" but "what is the least Anki, and the smallest amount of tooling, that maximises comprehension of the media Hiina actually wants to watch, play and read". Mining frameworks the community still uses put it the same way. TheMoeWay says that after the beginner stage, mining "will essentially become the heart of your Japanese study", and its advice after that is simply to "immerse a lot and learn words and grammar" ([TheMoeWay guide](https://learnjapanese.moe/guide/)).
 
-A companion report on AI memory palaces and superdidactic AI found a constraint that fits this framing: the binding constraint on AI tutors in the field is engagement, not explanation quality. In the large Khanmigo trial, students messaged the tutor on a median of about a third of practice days, and the effect was about 0.06-0.08 SD per year ([NBER w35620](https://www.nber.org/papers/w35620)). The design consequence for this project: a tool that makes watching or reading more fun is worth more than one that makes studying slightly more efficient but gets used less.
+A [companion report on AI memory palaces and superdidactic AI](https://ai.hiina.space/reports/ai-memory-palaces-and-superdidactic-ai.md) found a constraint that fits this framing: the binding constraint on AI tutors in the field is engagement, not explanation quality. In the large Khanmigo trial, students messaged the tutor on a median of about a third of practice days, and the effect was about 0.06-0.08 SD per year ([NBER w35620](https://www.nber.org/papers/w35620)). The design consequence for this project: a tool that makes watching or reading more fun is worth more than one that makes studying slightly more efficient but gets used less.
 
 ### Current deck and tooling
 
