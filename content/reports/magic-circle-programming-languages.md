@@ -1,7 +1,7 @@
 ---
 id: magic-circle-programming-languages
 title: Magic circle programming languages
-version: 1
+version: 2
 published: 2026-10-27
 updated: 2026-10-27
 author: Hiina
@@ -89,7 +89,7 @@ The closest thing to the full idea appeared in May 2026. **wha-spell-simulator**
 
 ## 3. Recognition in 2026: geometry is cheap, topology is hard, VLMs judge badly
 
-Per-stroke quality metrics (circle-fit residuals, closure gaps, template distances) were worked out in earlier prototyping, so this section covers only what sits above them: whole-diagram structure, calibration, and where models fail.
+Per-stroke quality metrics (circle-fit residuals, closure gaps, template distances) were worked out in earlier unpublished prototyping of the author's VR spellcasting recogniser, so this section covers only what sits above them: whole-diagram structure, calibration, and where models fail.
 
 **Structure-level accuracy lags symbol-level accuracy everywhere.** Arrow R-CNN, which adds an arrow head-and-tail keypoint head to Faster R-CNN, raised whole-diagram recognition on a scanned flowchart dataset from 37.7% to 78.6% and recognised more than 68% of diagrams across four datasets combined, while symbol recall on FC_A reached 98.3%, in under 100 ms per diagram ([Springer](https://link.springer.com/article/10.1007/s10032-020-00361-1)). Its weak point is arrows: overlapping arrow boxes confuse head attribution. A 2025 pipeline that feeds a fine-tuned detector's graph to GPT-4o reports arrow-related detection mAP of 0.235 against 0.653 for other classes ([arXiv 2505.07864](https://arxiv.org/html/2505.07864v1)). In handwritten maths, a structural recogniser reaches 80.52, 83.63 and 74.14% expression rate on CROHME 2016, 2019 and 2023 with generated annotations, and 56.29, 54.63 and 52.82% without them ([arXiv 2508.19773](https://arxiv.org/pdf/2508.19773)). DECIMER, trained only on up to 152 million synthetic renders, reads 73.25% of 5,088 real hand-drawn molecules exactly, where earlier tools score 0.57 to 26.98%, and quadrupling the synthetic set from 38 million added under 3 points ([PMC11227129](https://pmc.ncbi.nlm.nih.gov/articles/PMC11227129)). **A fixed grammar plus synthetic renders with jitter is the transferable recipe**, and in a circle language the quality model doubles as the augmentation model.
 
@@ -101,7 +101,7 @@ Per-stroke quality metrics (circle-fit residuals, closure gaps, template distanc
 
 ## 4. Five designs, five computational models
 
-The design pass worked from five principles. Meaning goes in what classic geometry measures well (ring radii and concentricity, angles around a centre, containment, vertex counts) and stays out of arbitrary line topology and fine detail inside small glyphs. Identity and magnitude are separate channels: shape picks the operator, and quality, size or count sets how much, with precision graded and never a gate, except deliberately in Athanor. Evaluation is visible and errors are typed and theatrical, as in the Wand Simulator, HexDebug and Hex mishaps. Everything is bounded by a resource the player can see. And each language gets one central idea and its own model of computation. None of these designs has been built or tested; parameter values marked "(guess)" are ones the design pass itself flagged as guesses, and the foundational references it names (Joy, Lafont, Mazza, Lamping, Faust, Mackworth, Păun, Guo et al.) were cited from the design pass's own knowledge rather than fetched for this report.
+The design pass (an earlier stage of this research that drafted the five designs below) worked from five principles. Meaning goes in what classic geometry measures well (ring radii and concentricity, angles around a centre, containment, vertex counts) and stays out of arbitrary line topology and fine detail inside small glyphs. Identity and magnitude are separate channels: shape picks the operator, and quality, size or count sets how much, with precision graded and never a gate, except deliberately in Athanor. Evaluation is visible and errors are typed and theatrical, as in the Wand Simulator, HexDebug and Hex mishaps. Everything is bounded by a resource the player can see. And each language gets one central idea and its own model of computation. None of these designs has been built or tested; parameter values marked "(guess)" are ones the design pass itself flagged as guesses, and the foundational references it names (Joy, Lafont, Mazza, Lamping, Faust, Mackworth, Păun, Guo et al.) were cited from the design pass's own knowledge rather than fetched for this report.
 
 ### Shared machinery: the quality score q
 
