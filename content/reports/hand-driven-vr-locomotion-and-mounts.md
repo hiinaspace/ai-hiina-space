@@ -1,7 +1,7 @@
 ---
 id: hand-driven-vr-locomotion-and-mounts
 title: Hand-driven VR locomotion leaves vehicles and mounts open
-version: 1
+version: 2
 published: 2026-10-27
 updated: 2026-10-27
 author: Hiina
@@ -15,7 +15,7 @@ topics: [vr, vr-locomotion, game-design]
 
 Gorilla Tag's movement is one member of a larger family. A contact point stays fixed in the world, the body integrates the inverse of the hand's motion, and the body keeps its momentum once contact ends. Climbing, Lone Echo's zero-G push-off, Meta's walking-stick locomotor, world-drag, kayak paddling and push-rim wheelchairs all share that core. A second family, arm-swing impulses, flapping, palm thrusters and grapples, works in open air with no surface.
 
-This report catalogues both families, looks for the gaps that shipped VR has left, and proposes six prototypes for a builder who already has stationary-bike, foot-tracker rollerblade and mech-cockpit locomotion experiments in Godot.
+This report catalogues both families, looks for the gaps that shipped VR has left, and proposes six prototypes for a builder who already has stationary-bike, foot-tracker rollerblade and mech-cockpit locomotion experiments in Godot, none of them published yet.
 
 ## 1. Summary
 
