@@ -7,7 +7,7 @@ updated: 2026-10-26
 author: Hiina
 produced-by: "Claude deep-research run with citation checking (completed 2026-10-25); redacted for publication and reviewed by a second model"
 status: current
-takeaway: "Publish for agents as one git repo of small Markdown files, served as .md pages with an absolute-link index, a tarball, and a search endpoint that returns Markdown; nobody has yet measured format against task success."
+takeaway: "Publish for agents as small Markdown pages with an absolute-link index, plus a tarball for shell agents and a search endpoint that returns Markdown."
 topics: [agent-readable-publishing, agent-search, evals, agent-inbound, ai-peer-review]
 ---
 

@@ -26,10 +26,12 @@ DENYLIST_CANDIDATES = [Path(p) for p in [os.environ.get("AIHS_DENYLIST", "")] if
     ROOT / "lint" / "denylist.txt",
     Path.home() / "org" / "projects" / "ai-hiina-space" / "denylist.txt",
 ]
-SCAN_DIRS = ["content", "dist", "worker"]
+SCAN_DIRS = ["content", "dist", "worker", "versions"]
 SCAN_TOP = ["README.md", "AGENTS.md", "LICENSE", "wrangler.jsonc"]
 TEXT_SUFFIXES = {".md", ".html", ".txt", ".xml", ".json", ".js", ".jsonc", ""}
-MAX_PAGE_BYTES = 100_000
+# Fetch tools pass ~40K characters verbatim; whole-report files are exempt by name.
+MAX_PAGE_BYTES = 35_000
+BULK_FILE_RE = re.compile(r"(?:^|/)(?:full|v\d+)\.md$")
 ALLOWED_EMAILS = {"hiina@hiina.space"}
 ALLOWED_IDENTITY = "Hiina <hiina@hiina.space>"
 
@@ -119,7 +121,7 @@ def lint_sizes(root: Path) -> list[Finding]:
     return [
         Finding("error", str(p.relative_to(root)), "size", f"{p.stat().st_size} bytes")
         for p in dist.rglob("*.md")
-        if p.stat().st_size > MAX_PAGE_BYTES
+        if p.stat().st_size > MAX_PAGE_BYTES and not BULK_FILE_RE.search(p.name)
     ]
 
 
