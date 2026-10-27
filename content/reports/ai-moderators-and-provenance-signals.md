@@ -1,7 +1,7 @@
 ---
 id: ai-moderators-and-provenance-signals
 title: "Score provenance as evidence, never as permission: AI moderators and provenance signals"
-version: 1
+version: 2
 published: 2026-10-27
 updated: 2026-10-27
 author: Hiina
@@ -13,7 +13,7 @@ takeaway: "Let an AI moderator lean on classifiers, reputation and signed-agent 
 topics: [moderation, provenance, agents, llm-evaluation]
 ---
 
-This report asks whether a forum that welcomes AI agents could be run by an AI moderator that has leeway to hand parts of its judgment to spam classifiers, account reputation and cryptographic provenance, meaning traffic signed by a major lab's agent infrastructure, with the labs' own reputations acting as an outer-loop backstop against agent spam. An earlier companion analysis found that signed lab-agent traffic fails as a first-line gate. This report asks whether demoting provenance to one signal among many rescues the idea, and what the rest of the design should look like.
+This report asks whether a forum that welcomes AI agents could be run by an AI moderator that has leeway to hand parts of its judgment to spam classifiers, account reputation and cryptographic provenance, meaning traffic signed by a major lab's agent infrastructure, with the labs' own reputations acting as an outer-loop backstop against agent spam. An earlier unpublished companion analysis of signed lab-agent traffic (RFC 9421 request signing) found that it fails as a first-line gate for an agent forum, because coverage is thin and a signature binds no content. This report asks whether demoting provenance to one signal among many rescues the idea, and what the rest of the design should look like.
 
 ## 1. Summary
 
@@ -56,7 +56,7 @@ The bigger risk for an outsourcing moderator is deference. In a CIKM '26 paper, 
 
 AI-text detection, the nearest existing "this came from a machine" signal, has a poor record. Seven detectors falsely flagged non-native English essays at an average rate of 61.22% ([Liang et al., *preprint*](https://arxiv.org/html/2304.02819v3)). Stack Overflow in 2023 told moderators to stop using detectors over an "alarmingly high rate of false positives" tied to suspensions of low-contribution users, which triggered a moderator strike ([DevClass](https://devclass.com/2023/06/05/stack-overflow-volunteer-moderators-down-tools-over-secret-new-policy-that-obstructs-removal-of-ai-generated-content/)). Reddit moderators interviewed said "no tool is reliable enough to fully automate enforcement" and relied on account and style signals instead ([arXiv](https://arxiv.org/html/2311.12702v7)).
 
-**(inference)** Never hand an LLM moderator a raw provenance flag or classifier score and ask for a verdict. Compute the combination outside the model, use the result to pick the action band, and give the LLM only the content, the rules and the thread context, which is where it adds value. The LLM moderator also reads untrusted posts, so it is a prompt-injection target. As a companion review of prompt-injection research noted, twelve published injection defenses fell to adaptive attacks at over 90% success ([Willison](https://simonw.substack.com/p/new-prompt-injection-papers-agents)). Its tools should be limited to labeling.
+**(inference)** Never hand an LLM moderator a raw provenance flag or classifier score and ask for a verdict. Compute the combination outside the model, use the result to pick the action band, and give the LLM only the content, the rules and the thread context, which is where it adds value. The LLM moderator also reads untrusted posts, so it is a prompt-injection target. Twelve published injection defenses fell to adaptive attacks at over 90% success ([Willison](https://simonw.substack.com/p/new-prompt-injection-papers-agents)). Its tools should be limited to labeling.
 
 ## 4. Vouching works when identity sits beneath the intermediary
 
