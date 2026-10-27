@@ -1,7 +1,7 @@
 ---
 id: ai-memory-palaces-and-superdidactic-ai
 title: AI memory palaces and superdidactic AI
-version: 1
+version: 2
 published: 2026-10-27
 updated: 2026-10-27
 author: Hiina
@@ -31,13 +31,13 @@ The motivating use case is a solo builder who supervises many agent projects thr
 | Neural UIs and BCI | Pixel-rendered desktops can't hold state or text; BCIs reached \~mouse parity at \~10 bits/s | Far |
 | Uploads and "the soul" | Emulation not close even for a worm; distilling a work policy has 50 years of precedent | Policy yes, self no |
 
-The most promising build is a re-entry card on each decision-queue item (section 7, build 1). It's a weekend of work, and the queue's own history gives the baseline: in the motivating setup, asks answered live took minutes, while asks left in notes took 12–62 days. This report builds on a companion report on personal web-surfing models and an ought-driven tab feed, and doesn't repeat the companion reports on AI enfeeblement and idle supervisors, or on AI meditation and flow steering.
+The most promising build is a re-entry card on each decision-queue item (section 7, build 1). It's a weekend of work, and the queue's own history gives the baseline: in the motivating setup, asks answered live took minutes, while asks left in notes took 12–62 days. This report builds on a [companion report on personal web-surfing models](https://ai.hiina.space/reports/personal-web-surfing-models.md) and the ought-driven tab feed it proposes, and doesn't repeat the companion reports on [AI enfeeblement and idle supervisors](https://ai.hiina.space/reports/ai-enfeeblement-and-the-peter-principle.md), or on [AI meditation and flow steering](https://ai.hiina.space/reports/ai-meditation-and-flow-steering.md).
 
 ## 2. Context reinstatement: prompt engineering the human
 
 A literal memory palace is the wrong tool for getting someone back into a project: its evidence covers ordered lists, and a richer environment isn't what makes it work. What restores a headspace well enough to decide is a short set of externalized cues: where things stand, what the person meant to do next, and their own earlier words. It works best when the brief makes them retrieve the intent before it tells them. I found no controlled study of an AI building a palace or reinstatement environment for someone's project state; that gap is real.
 
-The motivating setup has already measured the cost. A practice review of its decision queue found that asks answered live took minutes, while asks left in notes sat 12–62 days. Most of that gap is plausibly re-entry cost, the effort of getting back into a project before being able to answer.
+The motivating setup has already measured the cost. An unpublished practice review of its decision queue found that asks answered live took minutes, while asks left in notes sat 12–62 days. Most of that gap is plausibly re-entry cost, the effort of getting back into a project before being able to answer.
 
 ### Memory palaces work for lists, not judgment
 
@@ -139,7 +139,7 @@ The neural models predict recall noticeably better, but a better recall predicto
 
 **Content-aware scheduling looks better offline than online.** [KAR3L](https://arxiv.org/pdf/2402.12291) (EMNLP 2024) used card text to reach AUC 0.864 vs FSRS's 0.752 offline, but in its 27-user online test accuracy was no better (0.86 vs 0.88). [LECTOR](https://arxiv.org/html/2508.03275)'s gains come from simulated learners only.
 
-**LLM-written cards need a human to pick the targets.** In a [Brown medical school pipeline](https://www.medrxiv.org/content/10.1101/2025.05.13.25327518v1.full.pdf), 4.8–6.4% of generated cards were hallucinated and \~21.5% needed edits for information density, too much or too little. Matuschak's [notes](https://notes.andymatuschak.org/zomoPzCNzSi5GqtfTeVWgm7RjmiArjS8vvM5) found GPT-4 writes usable declarative prompts when given pre-selected targets and an angle hint, and fails on conceptual material. An anime-subtitle vocabulary premine pipeline, described in a companion report on Japanese learning and Anki tooling, already works this way: the pipeline picked targets, and the hard part was filtering, not generation.
+**LLM-written cards need a human to pick the targets.** In a [Brown medical school pipeline](https://www.medrxiv.org/content/10.1101/2025.05.13.25327518v1.full.pdf), 4.8–6.4% of generated cards were hallucinated and \~21.5% needed edits for information density, too much or too little. Matuschak's [notes](https://notes.andymatuschak.org/zomoPzCNzSi5GqtfTeVWgm7RjmiArjS8vvM5) found GPT-4 writes usable declarative prompts when given pre-selected targets and an angle hint, and fails on conceptual material. A personal anime-subtitle vocabulary premine pipeline, which mines candidate words and example lines from subtitle files into Anki, already works this way: the pipeline picked targets, and the hard part was filtering, not generation.
 
 **Replacing the deck has one good result behind it.** Varied retrieval cues beat a fixed cue across seven experiments, and learners wrongly judged the fixed cue better ([Butowska-Buczynska et al., PNAS 2024](https://share.swps.edu.pl/handle/swps/1120)). That supports an LLM generating fresh questions per review from a learner's notes. Nobody has tested conversational review against fixed cards over months, or LLM grading of free recall inside the loop; both gaps look real. The base effects are solid: retrieval practice g = 0.50 ([Rowland 2014](https://courseware.epfl.ch/assets/courseware/v1/fdde2f0aa590bf3b1324077a6bf1540c/asset-v1%3AEPFL%2BDEMO%2B2020%2Btype%40asset%2Bblock/Rowland2014-meta-analysis.pdf), 0.73 with feedback), and the optimal gap shrinks from 20–40% of a one-week retention interval to 5–10% of a one-year one ([Cepeda 2008](https://pubmed.ncbi.nlm.nih.gov/19076480/)).
 
@@ -201,9 +201,9 @@ LLM-specific evidence on behavior is close to nil. The one randomized field tria
 - **Timing by receptivity is worth something.** ML-timed messages got up to 40% better receptivity than random timing ([Mishra 2021](https://arxiv.org/abs/2011.08302)), with predictors like phone use, activity and time of day ([Künzler 2019](https://cs.dartmouth.edu/dfk/research/kunzler-receptivity/index.html)).
 - **Novelty decays, so rotate.** Duolingo's recovering bandit penalizes recently used message templates with a 15-day half-life ([Yancey & Settles 2020](https://research.Duolingo.com/papers/yancey.kdd20.pdf)). The online gain was +0.4–0.5%, a reminder that timing optimization is a small lever.
 - **People under-offload.** Gilbert's lab finds people are underconfident in unaided memory yet set reminders by perceived rather than actual need, and reminders help most under high load ([Chiu & Gilbert 2023](https://discovery.ucl.ac.uk/10176285/1/chiu-gilbert-2023-express-influence-of-the-physical-effort-of-reminder-setting-on-strategic-offloading-of-delayed.pdf)). Capture is the bigger win.
-- **Fade prompts to build a habit.** [Wood & Rünger 2016](https://dornsife.usc.edu/wendy-wood/wp-content/uploads/sites/183/2023/10/wood.runger.2016.pdf) argue habits bind to stable context cues; an external prompt that never fades substitutes for the internal cue. That is the same tension the companion report on AI enfeeblement covers from the other side.
+- **Fade prompts to build a habit.** [Wood & Rünger 2016](https://dornsife.usc.edu/wendy-wood/wp-content/uploads/sites/183/2023/10/wood.runger.2016.pdf) argue habits bind to stable context cues; an external prompt that never fades substitutes for the internal cue. That is the same tension the [companion report on AI enfeeblement](https://ai.hiina.space/reports/ai-enfeeblement-and-the-peter-principle.md) covers from the other side.
 
-An "SRS for intentions" would treat each commitment as a card: dense prompts right after a plan is formed, lengthening intervals when the person acts, shorter ones and a changed cue after a miss, a contextual bandit with a dose penalty picking time and channel, and rotated wording. HeartSteps and Oralytics already encode prompt "dosage" as a decaying count with a burden cost ([Oralytics design](https://arxiv.org/html/2406.13127v1)). The difference from flashcards is the outcome signal: "did it" is sparse and late, where recall is graded instantly. The ought-driven tab feed in the companion report on personal web-surfing models is the reading-side instance of the same scheduler.
+An "SRS for intentions" would treat each commitment as a card: dense prompts right after a plan is formed, lengthening intervals when the person acts, shorter ones and a changed cue after a miss, a contextual bandit with a dose penalty picking time and channel, and rotated wording. HeartSteps and Oralytics already encode prompt "dosage" as a decaying count with a burden cost ([Oralytics design](https://arxiv.org/html/2406.13127v1)). The difference from flashcards is the outcome signal: "did it" is sparse and late, where recall is graded instantly. The ought-driven tab feed in the [companion report on personal web-surfing models](https://ai.hiina.space/reports/personal-web-surfing-models.md) is the reading-side instance of the same scheduler.
 
 ### Model-rendered computers
 
@@ -295,7 +295,7 @@ For each active project, extract five to ten cards from the builder's own words:
 Give a model each past queue item, the project note at that time, and the builder's earlier answers, and ask it to predict the choice and reason. Run it on the answer history first, holding out the latest answers.
 
 - **Why:** Dawes-style bootstrapping says a model of a person's policy can match them and is less noisy. Park and Twin-2K say LLM clones get 80–90% of test-retest on attitudes but are "more rational" than people, so look for where it misses the builder's taste calls.
-- **How to tell:** accuracy against "always pick the default" and against base rates, plus calibration. If it's good on some item types, those items can show "you'd probably pick B because of X", which is itself a re-entry cue. The rubber-stamping risk from the companion report on AI enfeeblement applies: show the prediction after the builder's pre-reveal answer, not before.
+- **How to tell:** accuracy against "always pick the default" and against base rates, plus calibration. If it's good on some item types, those items can show "you'd probably pick B because of X", which is itself a re-entry cue. The rubber-stamping risk from the [companion report on AI enfeeblement](https://ai.hiina.space/reports/ai-enfeeblement-and-the-peter-principle.md) applies: show the prediction after the builder's pre-reveal answer, not before.
 
 ### 4. Varied-cue subtitle vocabulary cards (weekend)
 
