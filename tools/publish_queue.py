@@ -18,7 +18,8 @@ write must not re-review or hold it. An `<slug>.original.md` left behind after
 its draft went to done/ or held/ follows it there.
 
 Pushing the commit and deploying are left to the caller (the CI workflow).
-Prints a JSON summary: {"published": [...], "skipped": [...], "held": [{"slug", "reason"}]}.
+Prints a JSON summary: {"published", "skipped", "deferred": [slug...], "held": [{"slug",
+"reason"}]}; progress lines go to stderr.
 The reviewer's model is checked from `modelUsage` in the CLI's JSON output, not
 from its self-report; a substitution fails the draft.
 """
@@ -32,6 +33,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -42,6 +44,8 @@ import build  # noqa: E402
 REDACTION_NOTES_RE = re.compile(r"(?ms)^## Redaction notes\s*\n.*?(?=^## |\Z)")
 JSON_BLOCK_RE = re.compile(r"```json\s*\n(.*?)\n```", re.S)
 MAX_FIX_ROUNDS = 2
+REVIEW_TIMEOUT_S = 600
+BUDGET_S = 60 * 60  # stop starting new drafts after this; the rest wait for the next run
 IDENTITY = ["-c", "user.name=Hiina", "-c", "user.email=hiina@hiina.space"]
 
 REVIEW_PROMPT = """You are the publication reviewer for ai.hiina.space. Apply the policy
@@ -97,6 +101,11 @@ def run(cmd: list[str], cwd: Path = ROOT, **kw) -> subprocess.CompletedProcess[s
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=False, **kw)
 
 
+def log(msg: str) -> None:
+    """Progress goes to stderr so the CI log shows it; stdout carries the JSON summary."""
+    print(f"[{time.strftime('%H:%M:%S')}] {msg}", file=sys.stderr, flush=True)
+
+
 def lint(rel_frozen: str | None = None) -> str | None:
     """Build and lint; return the failure output, or None when clean.
 
@@ -119,26 +128,35 @@ def review(slug: str, draft: str, notes: str, original: str, policy: str, model:
         draft=draft,
         original=original or "(not provided)",
     )
-    r = run(
-        [
-            "claude",
-            "-p",
-            "--model",
-            model,
-            "--output-format",
-            "json",
-            "--tools",
-            "",
-            "--strict-mcp-config",
-            "--max-turns",
-            "2",
-        ],
-        input=prompt,
-    )
+    t0 = time.monotonic()
+    try:
+        r = run(
+            [
+                "claude",
+                "-p",
+                "--model",
+                model,
+                "--output-format",
+                "json",
+                "--tools",
+                "",
+                "--strict-mcp-config",
+                "--max-turns",
+                "2",
+            ],
+            input=prompt,
+            timeout=REVIEW_TIMEOUT_S,
+        )
+    except subprocess.TimeoutExpired:
+        raise Hold(f"reviewer timed out after {REVIEW_TIMEOUT_S}s") from None
     if r.returncode != 0:
         raise Hold(f"reviewer call failed: {(r.stderr or r.stdout)[-1000:]}")
     out = json.loads(r.stdout)
     models = list(out.get("modelUsage", {}))
+    log(
+        f"  review {slug}: {time.monotonic() - t0:.0f}s, turns={out.get('num_turns')}, "
+        f"cost=${out.get('total_cost_usd', 0):.2f}, stop={out.get('terminal_reason')}"
+    )
     if not any(m.startswith(model) for m in models):
         raise Hold(f"reviewer ran on {models}, not {model}")
     text = out.get("result", "")
@@ -234,9 +252,15 @@ def main(argv: list[str] | None = None) -> int:
         for p in args.queue.glob("*.md")
         if not p.name.endswith((".original.md", ".review.md")) and p.name != "README.md"
     )
-    summary: dict[str, list] = {"published": [], "skipped": [], "held": []}
+    summary: dict[str, list] = {"published": [], "skipped": [], "held": [], "deferred": []}
+    started = time.monotonic()
     for draft in drafts:
         slug = draft.stem
+        if time.monotonic() - started > BUDGET_S:
+            log(f"time budget spent; leaving {slug} and later drafts queued")
+            summary["deferred"].append(slug)
+            continue
+        log(f"draft {slug}")
         try:
             _, rev = process(draft, args.queue, policy, args.model)
             assert rev is not None
