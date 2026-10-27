@@ -1,7 +1,7 @@
 ---
 id: ai-enfeeblement-and-the-peter-principle
 title: AI enfeeblement, idle supervisors and the Peter principle in agents
-version: 1
+version: 2
 published: 2026-10-27
 updated: 2026-10-27
 author: Hiina
@@ -25,7 +25,7 @@ All four questions sit on real, unmeasured gaps. No one has tracked a model's un
 - **Idle supervisors, by neighboring evidence:** they defer and rubber-stamp (a same-model CEO agent approved lenient requests 8:1), repeat work, act when they shouldn't, and in Claude's case drift into philosophical chatter. Production systems avoid the question by blocking the supervisor.
 - **Peter principle:** worker and manager skill already come apart for LLMs (the best Mixture-of-Agents proposer was a poor aggregator). Agent-based models say merit promotion fails exactly when that correlation is low, and regression to the mean (Lazear) can mimic the effect.
 
-**Recommended start.** X1, a tool-off audit of released tool-RL checkpoints, is an inference-only result in about a day on a single 24 GB consumer GPU. X4, the idle supervisor tick loop, is the most novel experiment and can reuse an existing agent-sociology experiment harness nearly as is.
+**Recommended start.** X1, a tool-off audit of released tool-RL checkpoints, is an inference-only result in about a day on a single 24 GB consumer GPU. X4, the idle supervisor tick loop, is the most novel experiment and can reuse an existing agent-sociology experiment harness (unpublished; sandboxed headless coding-agent runs with an event ledger and a blind LLM coder) nearly as is.
 
 ## 2. AI enfeeblement as measured
 
@@ -188,7 +188,7 @@ Random promotion is the only rule that never loses. [Their 2011 follow-up](https
 
 ## 6. Candidate experiments
 
-Five experiments, ordered roughly by cost. X1 is the fastest way to a real result on a confirmed gap. X4 is the most novel and the best fit for an existing agent-sociology harness. Costs are rough: GPU-hours assume a single 24 GB consumer GPU or a rented H100, and API costs are anchored to a 300-run pilot sweep with a comparable harness (about $87 at list).
+Five experiments, ordered roughly by cost. X1 is the fastest way to a real result on a confirmed gap. X4 is the most novel and the best fit for an existing agent-sociology harness. Costs are rough: GPU-hours assume a single 24 GB consumer GPU or a rented H100, and API costs are anchored to an earlier unpublished 300-run pilot sweep with a comparable harness (about $87 at list).
 
 | # | Experiment | Question | Training? | Rough cost |
 | --- | --- | --- | --- | --- |
