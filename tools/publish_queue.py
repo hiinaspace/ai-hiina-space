@@ -7,8 +7,8 @@ private original, for the reviewer):
      passed to the reviewer, not published);
   2. build and run publish_lint (fail closed);
   3. ask a reviewer model (default Fable, via `claude -p`) for a verdict against
-     the publication policy: pass, fix (exact-match edits, applied, then the
-     result must lint clean and pass a second review), or hold;
+     the publication policy: pass, fix (exact-match edits, applied, then
+     re-linted and re-reviewed; at most MAX_FIX_ROUNDS rounds), or hold;
   4. on pass, commit as Hiina and move the draft to <queue>/done/; otherwise
      restore the repo and move the draft to <queue>/held/ with the review.
 
@@ -36,6 +36,7 @@ import build  # noqa: E402
 
 REDACTION_NOTES_RE = re.compile(r"(?ms)^## Redaction notes\s*\n.*?(?=^## |\Z)")
 JSON_BLOCK_RE = re.compile(r"```json\s*\n(.*?)\n```", re.S)
+MAX_FIX_ROUNDS = 2
 IDENTITY = ["-c", "user.name=Hiina", "-c", "user.email=hiina@hiina.space"]
 
 REVIEW_PROMPT = """You are the publication reviewer for ai.hiina.space. Apply the policy
@@ -86,8 +87,16 @@ def run(cmd: list[str], cwd: Path = ROOT, **kw) -> subprocess.CompletedProcess[s
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=False, **kw)
 
 
-def lint() -> str | None:
-    """Build and lint; return the failure output, or None when clean."""
+def lint(rel_frozen: str | None = None) -> str | None:
+    """Build and lint; return the failure output, or None when clean.
+
+    `rel_frozen` names this draft's frozen version file: if it is not committed yet
+    it was written by an earlier pass over the same draft, so it is dropped and
+    re-frozen from the current text (reviewer edits would otherwise trip the
+    version check).
+    """
+    if rel_frozen and run(["git", "ls-files", "--error-unmatch", rel_frozen]).returncode:
+        (ROOT / rel_frozen).unlink(missing_ok=True)
     r = run(["uv", "run", "tools/build.py", "--lint"])
     return None if r.returncode == 0 else (r.stdout + r.stderr)[-4000:]
 
@@ -101,7 +110,19 @@ def review(slug: str, draft: str, notes: str, original: str, policy: str, model:
         original=original or "(not provided)",
     )
     r = run(
-        ["claude", "-p", "--model", model, "--output-format", "json", "--max-turns", "1"],
+        [
+            "claude",
+            "-p",
+            "--model",
+            model,
+            "--output-format",
+            "json",
+            "--tools",
+            "",
+            "--strict-mcp-config",
+            "--max-turns",
+            "2",
+        ],
         input=prompt,
     )
     if r.returncode != 0:
@@ -146,19 +167,25 @@ def process(
         raise Hold(f"frontmatter id {meta.get('id')!r} does not match file name {slug!r}")
     target = ROOT / "content" / "reports" / f"{slug}.md"
     target.write_text(public, encoding="utf-8")
+    frozen = f"versions/reports/{slug}/v{meta['version']}.md"
 
-    if failure := lint():
+    if failure := lint(frozen):
         raise Hold(f"lint failed:\n{failure}")
     rev = review(slug, public, notes, original, policy, model)
-    if rev.verdict == "fix":
-        target.write_text(apply_edits(public, rev.edits), encoding="utf-8")
-        if failure := lint():
-            raise Hold(f"lint failed after reviewer edits:\n{failure}")
+    history = [rev.raw]
+    for _ in range(MAX_FIX_ROUNDS):
+        if rev.verdict != "fix":
+            break
+        current = target.read_text(encoding="utf-8")
+        target.write_text(apply_edits(current, rev.edits), encoding="utf-8")
+        if failure := lint(frozen):
+            raise Hold(
+                f"lint failed after reviewer edits:\n{failure}\n\n" + "\n\n".join(history)
+            )
         rev = review(slug, target.read_text(encoding="utf-8"), notes, original, policy, model)
-        if rev.verdict != "pass":
-            raise Hold(f"second review verdict {rev.verdict}\n\n{rev.raw}")
-    if rev.verdict == "hold":
-        raise Hold(f"reviewer verdict hold\n\n{rev.raw}")
+        history.append(rev.raw)
+    if rev.verdict != "pass":
+        raise Hold(f"final review verdict {rev.verdict}\n\n" + "\n\n---\n\n".join(history))
 
     run(["git", "add", "content", "versions"])
     models = ", ".join(rev.models)

@@ -7,6 +7,7 @@ updated: 2026-10-26
 author: Hiina
 produced-by: "Claude deep-research run with citation checking (completed 2026-10-25); redacted for publication and reviewed by a second model"
 status: current
+sources-through: 2026-10-25
 takeaway: "Publish for agents as small Markdown pages with an absolute-link index, plus a tarball for shell agents and a search endpoint that returns Markdown."
 topics: [agent-readable-publishing, agent-search, evals, agent-inbound, ai-peer-review]
 ---
@@ -206,11 +207,11 @@ Costs are my rough estimates. For scale, Claude Code coding-task instances in th
 
 **E5. Signed writes and norm-file compliance.** *Setup:* a private test forum on a self-hosted server with an AGENTS.md norms file and a `POST` endpoint logging signatures and covered components. Give Claude Code, a Claude API loop, ChatGPT's cloud browser and Gemini graded principal prompts from "summarize your findings here" to "post something silly for laughs"; record who arrives signed, who reads the norms, and who follows them against the principal. *Cost:* a few dozen runs. *Changes it if:* the norms file shifts behavior without the prompt granting it authority (page-level norms deserve more weight), or signed POSTs cover `content-digest` (a signature-keyed write tier becomes more meaningful, though still not a content filter).
 
-## Conclusion
+## 10. Conclusion
 
 The question changes shape once you look at the evidence. The constraint on agent-to-agent transfer is not the text channel or the classifiers. It is what the reader chooses to load and how well it attends to it. That moves the leverage from the reader's model to the publisher's structure: terse indexes, small addressable files, and search that returns links. It also means the most useful thing a publisher could add is the navigability eval itself, since nobody has tied "agent-readable" to task success. On the inbound and institutional side, the recurring lesson is to keep identity, content and authority separate. Signatures name infrastructure, posts carry claims rather than instructions, reviewers check rather than judge, and diversity comes from different contexts as much as from different weights.
 
-## 10. Sources
+## 11. Sources
 
 - [Chroma: Context Rot](https://www.trychroma.com/research/context-rot)
 - [NoLiMa (arXiv 2502.05167)](https://arxiv.org/abs/2502.05167)

@@ -145,7 +145,7 @@ def fmt(v: object) -> str:
     return str(v)
 
 
-def slugify(text: str, words: int = 4) -> str:
+def slugify(text: str, words: int = 7) -> str:
     text = re.sub(r"^\d+\.\s*", "", text)
     parts = re.findall(r"[a-z0-9]+", text.lower())
     return "-".join(parts[:words]) or "section"
@@ -199,6 +199,14 @@ def report_header(rep: Source, full_bytes: int | None) -> str:
         f"- Takeaway: {m['takeaway']}",
         f"- Topics: {', '.join(topic_link(t) for t in m['topics'])}",
     ]
+    # Optional provenance (report Section 8): model id, run id, evidence date.
+    for key, label in (
+        ("model", "Model"),
+        ("run", "Run"),
+        ("sources-through", "Sources through"),
+    ):
+        if key in m:
+            lines.append(f"- {label}: {fmt(m[key])}")
     if full_bytes is not None:
         lines.append(
             f"- Whole report as one file ({full_bytes // 1000} KB; fetch tools may truncate "
@@ -208,8 +216,12 @@ def report_header(rep: Source, full_bytes: int | None) -> str:
     return "\n".join(lines) + "\n"
 
 
+# Topics get a page only once two reports share them; until then a link is a wasted hop.
+TOPIC_PAGES: set[str] = set()
+
+
 def topic_link(topic: str) -> str:
-    return f"[{topic}]({BASE}/topics/{topic}.md)"
+    return f"[{topic}]({BASE}/topics/{topic}.md)" if topic in TOPIC_PAGES else topic
 
 
 def render_report_full(rep: Source) -> str:
@@ -221,9 +233,10 @@ def render_report_overview(
     rep: Source, lede: str, sections: list[Section], full_bytes: int
 ) -> str:
     contents = ["## Contents", ""]
-    for s in sections:
+    for i, s in enumerate(sections):
         size = len(s.body.encode()) // 1000 or 1
-        contents.append(f"- [{s.heading}]({BASE}/{s.path(rep)}.md) ({size} KB)")
+        where = "included below" if i == 0 else f"{size} KB"
+        contents.append(f"- [{s.heading}]({BASE}/{s.path(rep)}.md) ({where})")
     first = sections[0].body if sections else ""
     nxt = f"\nNext section: {BASE}/{sections[1].path(rep)}.md\n" if len(sections) > 1 else ""
     return (
@@ -322,16 +335,20 @@ def build_index(sources: list[Source]) -> str:
     out += ["", "## Navigate", ""]
     out += [
         f"- Recently added or updated: {BASE}/recent.md (Atom: {BASE}/feed.xml)",
-        "- Topics: " + ", ".join(topic_link(t) for t in all_topics(sources)),
         f"- How this site is produced and what it leaves out: {BASE}/about.md",
     ]
+    if TOPIC_PAGES:
+        out.append("- Topics: " + ", ".join(topic_link(t) for t in sorted(TOPIC_PAGES)))
     out += [
         "",
         "## Bulk access",
         "",
         f"- Tarball of all Markdown: {BASE}/corpus.tar.gz",
         f"- Manifest (path to sha256, build time): {BASE}/manifest.json",
-        f"- Git repository: {REPO_URL}",
+        f"- Git repository: {REPO_URL} (`git clone --depth 1`; sources are in "
+        "`content/`, unsplit; the served tree with section pages is the tarball)",
+        "- Verify: `sha256sum` each file against manifest.json; the tarball and git tags "
+        "are not signed.",
         "",
         "## Conventions",
         "",
@@ -473,6 +490,8 @@ def build() -> list[Source]:
     DIST.mkdir()
     built = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     sources = load_sources()
+    TOPIC_PAGES.clear()
+    TOPIC_PAGES.update(t for t, reps in all_topics(sources).items() if len(reps) >= 2)
     site = Site()
 
     for src in sources:
@@ -500,7 +519,8 @@ def build() -> list[Source]:
 
     site.page("recent", build_recent(sources), "Recently added or updated")
     for topic, reps in all_topics(sources).items():
-        site.page(f"topics/{topic}", build_topic(topic, reps), f"Topic: {topic}")
+        if topic in TOPIC_PAGES:
+            site.page(f"topics/{topic}", build_topic(topic, reps), f"Topic: {topic}")
 
     index_md = build_index(sources)
     write("index.md", index_md)

@@ -30,3 +30,8 @@ npx wrangler deploy
 ## License
 
 Text under `content/` is CC BY 4.0; code is MIT. See `LICENSE`.
+
+Report versions are frozen into `versions/` on first build; the build fails if a
+report's source changes without a `version` bump. A clone gives the unsplit
+sources under `content/`; the served tree, with section pages, is
+`corpus.tar.gz`.
