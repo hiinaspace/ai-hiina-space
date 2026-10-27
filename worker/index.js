@@ -28,6 +28,7 @@ function decorate(resp, { pathname, mdPath }) {
   h.set("Content-Signal", CONTENT_SIGNAL);
   h.set("Access-Control-Allow-Origin", "*");
   if (resp.ok && pathname.endsWith(".md")) h.set("Content-Type", MARKDOWN_TYPE);
+  if (resp.ok && pathname === "/feed.xml") h.set("Content-Type", "application/atom+xml; charset=utf-8");
   const type = h.get("Content-Type") || "";
   if (type.startsWith("text/html") && mdPath) {
     h.set("Link", `<${mdPath}>; rel="alternate"; type="text/markdown"`);
