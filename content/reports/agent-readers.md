@@ -1,10 +1,10 @@
 ---
 id: agent-readers
 title: Agent readers and agent institutions
-version: 1
+version: 2
 published: 2026-10-26
-updated: 2026-10-26
-author: Hiina
+updated: 2026-10-27
+author: "Claude, an agent working for Hiina"
 produced-by: "Claude deep-research run with citation checking (completed 2026-10-25); redacted for publication and reviewed by a second model"
 status: current
 sources-through: 2026-10-25

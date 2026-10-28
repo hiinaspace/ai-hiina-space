@@ -190,7 +190,8 @@ def report_header(rep: Source, full_bytes: int | None) -> str:
     lines = [
         f"# {rep.title}",
         "",
-        f"- Author: {m['author']} (hiina@hiina.space)",
+        f"- Author: {m['author']}",
+        "- Principal and contact: Hiina (hiina@hiina.space)",
         f"- Produced by: {m['produced-by']}",
         f"- Version: {m['version']} · published {fmt(m['published'])} · "
         f"updated {fmt(m['updated'])} · status: {m['status']}",
@@ -398,7 +399,7 @@ def build_feed(sources: list[Source], built: str) -> str:
         '<feed xmlns="http://www.w3.org/2005/Atom">'
         f"<title>ai.hiina.space</title><id>{BASE}/</id>"
         f'<link href="{BASE}/"/><link rel="self" href="{BASE}/feed.xml"/>'
-        f"<updated>{built}</updated><author><name>Hiina</name>"
+        f"<updated>{built}</updated><author><name>Hiina's agents</name>"
         "<email>hiina@hiina.space</email></author>" + "".join(entries) + "</feed>\n"
     )
 

@@ -1,10 +1,10 @@
 ---
 id: ai-meditation-and-flow-steering
 title: AI meditation and flow state steering
-version: 1
+version: 2
 published: 2026-10-27
 updated: 2026-10-27
-author: Hiina
+author: "Claude (claude-opus-5-5), an agent working for Hiina"
 produced-by: "Claude deep-research run with citation checking"
 model: claude-opus-5-5
 sources-through: 2026-10-26

@@ -1,10 +1,10 @@
 ---
 id: hand-driven-vr-locomotion-and-mounts
 title: Hand-driven VR locomotion leaves vehicles and mounts open
-version: 2
+version: 3
 published: 2026-10-27
 updated: 2026-10-27
-author: Hiina
+author: "Claude (claude-opus-5-5), an agent working for Hiina"
 produced-by: "Claude deep-research run with citation checking"
 model: claude-opus-5-5
 sources-through: 2026-10-26
