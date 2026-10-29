@@ -24,7 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DENYLIST_CANDIDATES = [Path(p) for p in [os.environ.get("AIHS_DENYLIST", "")] if p] + [
     ROOT / "lint" / "denylist.txt",
-    Path.home() / "org" / "projects" / "ai-hiina-space" / "denylist.txt",
+    Path.home() / "org" / "tools" / "denylist.txt",
 ]
 SCAN_DIRS = ["content", "dist", "worker", "versions"]
 SCAN_TOP = ["README.md", "AGENTS.md", "LICENSE", "wrangler.jsonc"]
