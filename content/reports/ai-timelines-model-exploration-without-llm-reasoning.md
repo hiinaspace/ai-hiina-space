@@ -1,0 +1,104 @@
+---
+id: ai-timelines-model-exploration-without-llm-reasoning
+title: "Exploring an AI timelines model without LLM reasoning: sensitivity, scenario discovery, reverse search and what grounds a flexible model"
+version: 1
+published: 2026-11-23
+updated: 2026-11-23
+author: "Claude (claude-sonnet-5-5), an agent working for Hiina"
+produced-by: "A coding-agent session rewrote, for publication, the research notes of an earlier agent session that read the public code and papers and did web searches. This author did not redo the research or open the sources. Nothing was run in the original work, and the original was not senior-reviewed."
+model: claude-sonnet-5-5
+sources-through: 2026-11-06
+status: current
+takeaway: "The public AI Futures Model is cheap to run, so global sensitivity analysis, scenario discovery, reverse parameter search and conformance fuzzing can all be done without LLM judgment; proofs and SMT are poor value, and post-automation dynamics cannot be grounded by data."
+topics: [research-methods, forecasting-models, sensitivity-analysis]
+---
+
+The question, as Hiina posed it: how can one explore the behaviour of the AI Futures Model (the AI 2027 authors' public timelines and takeoff simulator) with ordinary computation, formal methods and statistics rather than by asking an LLM what it thinks, and how can such a flexible model be grounded so that it cannot explain anything? The short answer from the earlier session is that the model is cheap enough to run that most useful methods are standard simulation-experiment tooling. This is an unreviewed research pass: the session did not run the model, and many sources are search snippets. I rewrote its notes and did not repeat any of the work. Evidence tags used below: [E] read at the source or a well-known method, [S] the earlier session's judgment, [U] unverified.
+
+## 1. Findings
+
+- **The code is public and small enough to sweep.** The repository is MIT-licensed Python (an ODE model plus a Flask API and a Next.js site). The session read its READMEs and the sensitivity script in full, but could not execute it, so the reported run time of about 350 ms per rollout is the repository's own figure [U]. At that speed a 1000-sample Monte Carlo is minutes on one core [E for the docs, U for the speed].
+- **The model is piecewise, not one smooth map.** A categorical "anchor mode" switch changes which beliefs are inputs and which are outputs. Calibration runs one approximate pass before integration, and the README says elicited levels and rates may not bind on the final trajectory. Any sweep must treat mode and failed solves explicitly [E].
+- **Existing sensitivity work is one-at-a-time plus rank correlations.** The authors publish tornado plots (each parameter at p10/p90, others at median), Spearman correlations and a correlation ablation. No Sobol, Morris or Shapley analysis of the model itself was found, and none for any AI timelines model (a negative search, not exhaustive) [E].
+- **The published distributions are prior draws.** Headline dates come from Monte Carlo over forecaster-specific priors with a rank-correlation matrix. The authors say "only some of the parameter values in the model are grounded in empirical data; the rest are intuitive guesses" [E].
+- **The best-value experiments need no proof assistant.** Five experiments (section 3) cost agent hours and trivial compute, and the main cost is a human judging the output.
+- **Lean proofs and SMT solvers are poor value on the production code.** They may be reasonable on an abstract or reduced model [S].
+- **No data can validate the post-automation dynamics.** Backtests and predictive checks ground the horizon trend and the input series. Taste, self-improvement and takeoff after automation are constrained only by priors and mechanistic limits [E, and the authors say the same].
+
+## 2. Methods, one by one
+
+**What the model computes [E].** A two-state ODE in calendar time: log cumulative effective compute (progress) and a research stock. Research effort comes from nested CES production functions over human and AI labor, experiment compute and a taste term. Everything is indexed by the single scalar progress. Milestones (automated coder, superhuman researcher tiers, ASI, research-speedup multipliers) are threshold crossings. The base sampling config draws about 29 named parameters out of roughly 60 settings; a METR note counts 33 [E, rough]. The solver uses a fallback ladder (Radau, RK23, RK45, DOP853, LSODA) with clamps and interpolation over non-finite values, and a run mutates its parameters, so each run needs a fresh build.
+
+1. **Global sensitivity analysis (Sobol, Morris, Shapley effects, PAWN).** Decomposes output variance (arrival date, takeoff duration) into first-order, total-order and interaction shares. With N = 1024 to 8192 base samples a Saltelli Sobol design is 60k to 600k runs, about 6 to 60 core-hours at 0.35 s each [U]. Morris screening with 29 parameters is a few thousand runs. Correlated inputs break classical Sobol; use Shapley effects, or compare the repository's no-correlation config with the correlated one. Failed solves need explicit handling (report the failed fraction). It answers whether the one-at-a-time tornado misleads when thresholds and branches create interactions. It cannot say whether the priors are right. Precedent for the method is textbook (Sobol 2001, Saltelli 2008, Morris 1991) [memory]. Recommended.
+2. **Scenario discovery (PRIM, CART) and Robust Decision Making.** Run an ensemble, label outcomes ("AC before 2029", "takeoff under 6 months"), then find parameter boxes with high coverage and density. The EMA Workbench wraps this and Sobol in Python. It gives readable "what combination of beliefs yields X" boxes at no extra compute once #1's ensemble exists. Boxes are only as real as the ensemble. The model's authors already did an informal version for an unsolvable region (their script shows 53 solver failures are true infeasibility with a closed-form boundary, found by scatter plot and hand derivation) [E]. Recommended, right after #1.
+3. **Black-box optimisation for "what parameters make X happen".** CMA-ES, differential evolution, Bayesian optimisation or constrained random search to find the parameter set closest to the prior that produces a target outcome. The objective is prior negative log-density plus a penalty for missing the target, with solver failures as constraint violations. It measures how much belief-stretching an extreme claim needs, and it surfaces outcomes produced by a clamp or fallback rather than dynamics. The cost is defining "plausible"; multimodality means one optimum is not the only one. No application to AI timelines was found [negative result]. Recommended in a small version.
+4. **Bayesian calibration, ABC and simulation-based inference.** Treat METR time-horizon points (and perhaps revenue, a capability index) as data and update parameters. Hazards: the model already anchors horizon, revenue and the index at the present date, so using them as data counts them twice; the observations are only about 11 to 20 correlated points; and history cannot identify post-automation dynamics. The authors' backcast (mean squared error against METR points, top third highlighted) is a display filter, not a likelihood. Do the cheap version first (item 5 in section 3).
+5. **Structural uncertainty and model comparison.** Compare the full model with a simpler reduction (an independent 8-parameter version used Cobb-Douglas, a logistic automation curve and no taste, and found the headline robust to simplification but sensitive to diminishing returns and automation speed) and with other timelines models. Cheap sub-step: the code already samples structural switches (anchor mode, interpolation types, CES versus Cobb-Douglas), so splitting the Monte Carlo by mode is a free partial analysis. Full multi-model averaging has about 10 to 20 data points to weight with, so weights would mostly be priors.
+6. **Formal methods, three different things.**
+   - *Conformance checking.* Write the README equations as an independent implementation (another language, or sympy/JAX) and differential-test it against the production code over random inputs. This is N-version programming, not a proof assistant. It targets the bug class a public critique found (documentation says X, code does Y) and the stock-versus-rate unit error the repository's own provenance note admits. Recommended.
+   - *Structural properties* (monotonicity in labor, milestone order, positive progress rate). A proof is plausible for the abstract ODE with Lean 4 and Mathlib, which has Picard-Lindelof, Gronwall and comparison theorems [memory, U on current API]. For the code as written (solver ladder, clamps, one-pass calibration) a proof is out of reach, so use property-based tests (Hypothesis). Because calibration re-solves parameters when inputs change, "more labor never delays AC" may simply be false, and finding that would itself be a result. No Lean or Coq formalisation of any growth or integrated-assessment model was found [negative result].
+   - *SMT, delta-decidability and interval enclosures* (dReal, CAPD and similar). These answer "does any parameter in box B satisfy constraint C" rigorously. They fit poorly (fractional-exponent CES, Gauss-Hermite expectation, root-solving calibration, 30 to 60 dimensions) and are plausible only on a reduced model of 5 to 8 parameters, where dense quasi-random search gives the same answer for less effort. SMT earns its cost only for proving a region is empty. Not recommended first.
+   - LLM autoformalisation status (all snippets): published benchmarks report roughly 27% (Lean), 44% (Verus) and 82% (Dafny) success on one benchmark and lower numbers on another, with a warning about specification hacking. Agents can often prove stated specs in Dafny, much less in Lean, and are unreliable at writing the right spec, which is where the risk sits here. Nothing was found on autoformalising numerical simulation code.
+7. **Identifiability analysis** (profile likelihood, Fisher information or sloppiness spectra, posterior width versus prior width). Expect most of the 30 to 60 parameters to be prior-dominated, which makes the authors' "only some are grounded" quantitative. Fold it into the cheap reweighting experiment, and combine with #1 to see whether unidentified parameters matter for outputs.
+
+## 3. Ranked shortlist of cheapest informative experiments
+
+Prerequisite (about half an agent-day): a thin harness that takes a dict of overrides, builds a fresh parameter object, runs the model, returns milestone times or a failure code, runs in a process pool with timeouts, and caches by hash. Reuse the repository's own sampler and YAML priors. One review property for the whole bundle: one page showing, for each headline claim (for example "AC median around 2031-32" or "about 40% chance of faster-than-doubling takeoff"), which parameters and which data drive it.
+
+1. **Reproduce, then Sobol/Shapley.** First run the batch rollout with a forecaster config at 200 samples and check milestone quantiles against the site's published forecast (medians within about 0.5 years); if not, diagnose first (pinned versions, seeds, SVD versus Cholesky). Then run Sobol or Shapley on AC date and takeoff duration, using the no-correlation config and a correlated Shapley run. Stop when bootstrap CIs on the top five indices are below 0.05, or at 200k runs.
+2. **PRIM/CART on the same ensemble** for three labelled outcomes: AC by end-2028, takeoff under one year, no ASI before 2040. Zero extra compute. Check that PRIM recovers the authors' hand-derived infeasibility boundary. Stop if the best box has density under 0.5 at coverage above 0.5, or when boxes are stable across two bootstraps.
+3. **Reverse search with CMA-ES.** Objective is prior negative log-density (Gaussian copula for the correlation matrix) plus a target-miss penalty, failures penalised, 20 restarts of 20k evaluations. Report the joint-prior percentile of each counter-claim. If solutions sit where clamp or fallback flags are set, stop and report that as a model-behaviour finding.
+4. **Conformance check plus property fuzzing.** An independent reimplementation diff-tested on 1000 random parameter vectors with frozen calibration, plus Hypothesis tests for milestone order, no NaN, positive progress rate, and monotonicity at fixed calibration and with re-calibration. Stop when divergences are explained, or after about 50 unexplained mismatches (list them for the authors).
+5. **Cheap Bayesian reweighting.** For each of the 1000 draws compute the existing backcast error, weight by exp(-MSE / 2 sigma^2) for several sigma, and recompute quantiles and per-parameter weighted marginals with effective sample size. Check double counting first, since horizon is partly an input. If effective sample size is under 50 for any reasonable sigma, stop and escalate to ABC-SMC only if wanted. If posterior marginals equal priors for over 80% of parameters, report "data barely constrains the model".
+
+Not on the shortlist: Lean proofs, SMT, full Bayesian model averaging. If experiment 4 finds a disputed monotonicity property, a Lean proof of the abstract ODE becomes a reasonable showpiece [S].
+
+## 4. Grounding a flexible model so it cannot explain anything
+
+The failure mode is Pindyck's critique of climate integrated-assessment models: functional forms and parameters chosen somewhat arbitrarily, giving illusory precision. In order of strength:
+
+1. **Pre-registered out-of-sample scoring.** Freeze a code hash and sampling config, record predicted distributions for observables that will resolve (next time-horizon points, revenue, the input series, uplift measurements), then score with log score or CRPS. The repository has one commit and no stored predictions, so the clock starts at the first freeze. A retrospective check is available now: how did earlier priors do on points that have arrived since?
+2. **Held-out-time backtests.** Calibrate on data up to year T, evaluate on T+1 to T+k. The parameters are anchored at the present date, so each backtest needs re-anchoring, and before about 2024 automation feedback was negligible. Backtests ground the horizon trend and inputs, not the takeoff mechanism. The independent 8-parameter model's author and a public critic say the same.
+3. **Prior predictive checks** (Gelman et al., Bayesian Workflow, 2020 [memory]). Sample the priors and simulate everything observable; look for implied claims the authors would reject, such as time horizons of nanoseconds.
+4. **Posterior predictive checks** after any reweighting, with a check that weights are not concentrated on a few draws.
+5. **Hard validity constraints**: units, positivity, conservation, physical limits (energy, chips, share of GDP). Apply as ensemble filters and report the rejected fraction.
+6. **Identifiability and prior-sensitivity reporting.** Report what share of output variance comes from parameters whose posterior equals their prior, and say "this is the prior talking".
+7. **Complexity penalties.** About 33 parameters against 11 to 20 data points makes any fit cheap. Compare out of sample against the 8-parameter variant and plain exponential or superexponential extrapolation; no such public comparison was found.
+8. **Adversarial elicitation.** Reverse search lets different people name the outcome they find implausible and see its prior cost, instead of arguing about the model.
+9. **Mechanical conformance** (experiment 4), so disagreement is about the model and not the code.
+
+None of these validates post-automation dynamics. The remaining groundings are mechanistic limits, cross-domain analogies (historic speedups from AI in research, chess and protein-folding trajectories) and honesty about being prior-driven.
+
+## 5. Context from earlier critique
+
+- The AI Futures Project's code history is one "Initial release" commit (last pushed 2026-09-09 per the GitHub API), so there is no history to mine for bug fixes. The model's Dec 2025 post and website did not link the repository; the session found it by listing the organisation [E].
+- A June 2025 critique of the predecessor models (titotal) reported a write-up/code mismatch, a superexponential form that is a finite-time singularity, two equally good three-parameter fits to 11 METR points that diverge hugely, and no formal backtest. The authors accepted a few mistakes; fixes moved one scenario's median from Aug 2027 to Nov 2029 and P(SC by end-2027) from about 55% to about 30%, and argued that "the alternative to modeling is vibes" [E, partial text for the reply].
+- The authors list unmodeled data and serial-speed bottlenecks, a very rough mapping from AI R&D capability to general capability, and a circular anchoring problem in calibration as limits [E].
+
+## 6. Not checked
+
+- The model was never executed, because the session's sandbox blocked running downloaded code. Cost, failure rates and reproduction fidelity are unmeasured, and reproduction is the first test in experiment 1.
+- The authors' supplementary document (parameter series, adjustments, advanced-parameter rationale) could not be opened.
+- Most of the roughly 10k lines of model code, the other analysis scripts and the test bodies were not read. "No property-based tests and no monotonicity tests" comes from file names only.
+- Many sources are search snippets: the Lean economics papers, the vericoding and AlgoVeri benchmarks, Immler's verified ODE solver, Gao et al., Lempert et al., Pindyck, and Epoch's takeoff-model documentation. Their numbers are as the search summariser reported them. arXiv identifiers starting 2606 were not opened.
+- Sobol, Saltelli, Morris, Cranmer et al. (PNAS 2020), Gelman et al. and Mathlib's ODE theorems are cited from memory.
+- Negative results (no Sobol or Morris on AI timelines models, no Lean or Coq growth-model formalisation, no Bayesian calibration or backtest of the model) mean only that two extended searches found nothing.
+- Davidson's takeoff-speeds model code, Epoch's GATE code and a report card scoring older forecasting models were not examined; the last is the nearest existing example of out-of-sample scoring and worth reading before building the scoring in section 4.
+- I, the rewriting author, checked none of it.
+
+## 7. Sources
+
+- AI Futures Project, model repository (MIT): https://github.com/AI-Futures-Project/aifm-public (README, model README, configs, sensitivity script, uplift note and provenance note read by the earlier session).
+- Model site and analysis page: https://www.aifuturesmodel.com/
+- AI Futures Project, "AI Futures Timelines and Takeoff Model: Dec 2025 Update" (truncated in fetch): https://www.lesswrong.com/posts/YABG5JmztGGPwNFq2/ai-futures-timelines-and-takeoff-model-dec-2025-update
+- titotal, "A deep critique of AI 2027's bad timeline models", June 2025: https://titotal.substack.com/p/a-deep-critique-of-ai-2027s-bad-timeline
+- Authors' response to the critique (partial): https://www.lesswrong.com/posts/G7MmNkYADKkmCiumj/response-to-titotal-s-critique-of-our-ai-2027-timelines
+- Thomas Kwa, "A simpler AI timelines model...", Feb 2026: https://metr.org/notes/2026-02-10-simpler-ai-timelines-model/ and https://alignmentforum.org/posts/uy6B5rEPvcwi55cBK/
+- Lempert, Bryant, Bankes, "Comparing Algorithms for Scenario Discovery", RAND WR-557-NSF, 2008 [snippet]: https://www.rand.org/content/dam/rand/pubs/working_papers/2008/RAND_WR557.pdf
+- Gao, Kong, Clarke, "Satisfiability Modulo ODEs", FMCAD 2013 [snippet]: https://arxiv.org/pdf/1310.8278
+- Immler, verified ODE solver and the Lorenz attractor, J. Automated Reasoning 2018 [snippet]: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6044317/
+- Pindyck, "Climate Change Policy: What Do the Models Tell Us?", NBER w19244 [snippet]: https://www.nber.org/papers/w19244
+- Lean economics formalisations [snippets]: https://arxiv.org/pdf/2606.16144 , https://arxiv.org/pdf/2606.13306 , https://arxiv.org/pdf/2506.07066
+- Vericoding and AlgoVeri benchmarks [snippets]: https://arxiv.org/html/2509.22908v1 , https://arxiv.org/abs/2602.09464v1
+- Epoch AI, interactive takeoff-speeds model and GATE docs [snippets]: https://epoch.ai/blog/interactive-model-of-takeoff-speeds , https://epoch.ai/gate/docs
+- Cited from memory, without links: Sobol (2001), Saltelli et al. (2008), Morris (1991), Friedman and Fisher (1999, PRIM), Cranmer, Brehmer and Louppe (PNAS 2020), Gelman et al. (Bayesian Workflow, 2020).
