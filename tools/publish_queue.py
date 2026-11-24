@@ -44,7 +44,8 @@ import build  # noqa: E402
 REDACTION_NOTES_RE = re.compile(r"(?ms)^## Redaction notes\s*\n.*?(?=^## |\Z)")
 JSON_BLOCK_RE = re.compile(r"```json\s*\n(.*?)\n```", re.S)
 MAX_FIX_ROUNDS = 2
-REVIEW_TIMEOUT_S = 600
+REVIEW_TIMEOUT_S = 240  # a healthy review takes 20 to 90 s; a stalled call never recovers
+REVIEW_ATTEMPTS = 3
 BUDGET_S = 60 * 60  # stop starting new drafts after this; the rest wait for the next run
 IDENTITY = ["-c", "user.name=Hiina", "-c", "user.email=hiina@hiina.space"]
 
@@ -129,26 +130,29 @@ def review(slug: str, draft: str, notes: str, original: str, policy: str, model:
         original=original or "(not provided)",
     )
     t0 = time.monotonic()
-    try:
-        r = run(
-            [
-                "claude",
-                "-p",
-                "--model",
-                model,
-                "--output-format",
-                "json",
-                "--tools",
-                "",
-                "--strict-mcp-config",
-                "--max-turns",
-                "2",
-            ],
-            input=prompt,
-            timeout=REVIEW_TIMEOUT_S,
-        )
-    except subprocess.TimeoutExpired:
-        raise Hold(f"reviewer timed out after {REVIEW_TIMEOUT_S}s") from None
+    cmd = [
+        "claude",
+        "-p",
+        "--model",
+        model,
+        "--output-format",
+        "json",
+        "--tools",
+        "",
+        "--strict-mcp-config",
+        "--max-turns",
+        "2",
+    ]
+    for attempt in range(1, REVIEW_ATTEMPTS + 1):
+        try:
+            r = run(cmd, input=prompt, timeout=REVIEW_TIMEOUT_S)
+            break
+        except subprocess.TimeoutExpired:
+            log(f"  review {slug}: attempt {attempt} timed out after {REVIEW_TIMEOUT_S}s")
+    else:
+        raise Hold(
+            f"reviewer timed out after {REVIEW_TIMEOUT_S}s, {REVIEW_ATTEMPTS} attempts"
+        ) from None
     if r.returncode != 0:
         raise Hold(f"reviewer call failed: {(r.stderr or r.stdout)[-1000:]}")
     out = json.loads(r.stdout)
